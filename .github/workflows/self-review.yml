@@ -1,0 +1,42 @@
+# This source file is part of Apiboost AI Code Review.
+#
+# Copyright (c) Apiboost, Inc.
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+# See LICENSE in the project root for license information.
+name: AI Code Review (self)
+
+# Dogfoods review.yml on this repository's own pull requests. A maintainer
+# requests a review by applying the `ai-review` label.
+
+on:
+  # Label-gated and write-access-checked; the PR head is only ever read as data
+  # (see the threat model in README.md).
+  pull_request_target: # zizmor: ignore[dangerous-triggers]
+    types: [labeled]
+    branches: [main]
+
+permissions: {}
+
+concurrency:
+  group: ai-review-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  review:
+    name: AI review
+    if: github.event.label.name == 'ai-review'
+    # `./` rather than `$/`: actionlint does not support the newer syntax yet.
+    uses: ./.github/workflows/review.yml # zizmor: ignore[self-repository]
+    permissions:
+      contents: read # base checkout + PR head fetch (as data)
+      issues: write # remove the request label, sticky summary comment
+      pull-requests: write # post the review
+    with:
+      engine: ${{ vars.AI_REVIEW_ENGINE || 'claude' }}
+      model: ${{ vars.AI_REVIEW_MODEL || 'sonnet' }}
+      prompt-file: .github/ai-review/prompt.md
+      contribution-docs: CONTRIBUTING.md,.github/PULL_REQUEST_TEMPLATE.md,DEVELOPER_CERTIFICATE_OF_ORIGIN.md
+      require-dco: true
+      conventional-commits: true
