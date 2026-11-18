@@ -77,13 +77,10 @@ on:
         description: Maximum inline comments posted per run.
         type: number
         default: 30
-    secrets:
-      ANTHROPIC_API_KEY:
-        description: >-
-          Key for the `claude` engine. Store it as a secret of the `environment`
-          input rather than passing it from the caller; an environment secret
-          takes precedence and is only exposed to the review job.
-        required: false
+    # No `secrets:` here on purpose. The engine key is an environment secret
+    # of `environment`, read by the review job only. Declaring it as a
+    # workflow_call secret shadows the environment secret: when the caller
+    # does not pass it, `secrets.ANTHROPIC_API_KEY` resolves to empty.
 
 permissions: {}
 

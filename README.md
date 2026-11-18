@@ -122,7 +122,7 @@ afterwards are not included.
 
 | Secret | Engine | Notes |
 |---|---|---|
-| `ANTHROPIC_API_KEY` | `claude` | Store it as an **environment** secret of `environment`. |
+| `ANTHROPIC_API_KEY` | `claude` | Store it as an **environment** secret of `environment`. The workflow doesn't accept secrets from the caller. |
 
 ## Threat model
 
@@ -148,7 +148,9 @@ it where every PR author is trusted.
 ## Adding an engine
 
 1. Add the engine's name to the `case` in `gate` → *Validate request*.
-2. Add an optional secret for it under `on.workflow_call.secrets`, and a branch in *Check engine credentials*.
+2. Read its secret from the `environment` (don't declare it under `on.workflow_call.secrets`: a declared
+   secret the caller doesn't pass shadows the environment secret as an empty value), and add a branch in
+   *Check engine credentials*.
 3. Add an engine step guarded by `if: inputs.engine == '<name>' && …`. Pin any action to a full SHA.
 4. Add a branch to *Normalize engine output* that maps the engine's native output to the shared JSON
    schema, plus `outcome`, `subtype`, `cost` and `turns`.
